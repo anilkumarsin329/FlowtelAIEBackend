@@ -1,43 +1,53 @@
 const mongoose = require('mongoose');
 
 const meetingSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true
-  },
-  phone: {
-    type: String,
-    required: true,
-    trim: true
-  },
   date: {
-    type: String,
+    type: Date,
     required: true
   },
   time: {
     type: String,
     required: true
   },
+  status: {
+    type: String,
+    enum: ['available', 'pending', 'confirmed', 'cancelled'],
+    default: 'available'
+  },
+  // Client Information (only when booked)
+  clientName: {
+    type: String,
+    default: ''
+  },
+  clientEmail: {
+    type: String,
+    default: ''
+  },
+  clientPhone: {
+    type: String,
+    default: ''
+  },
   message: {
     type: String,
     default: ''
   },
-  status: {
+  // Admin fields
+  cancellationReason: {
     type: String,
-    enum: ['pending', 'confirmed', 'completed', 'cancelled'],
-    default: 'pending'
+    default: ''
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  // Booking timestamp
+  bookedAt: {
+    type: Date
+  },
+  confirmedAt: {
+    type: Date
   }
+}, {
+  timestamps: true
 });
+
+// Compound index for date and time uniqueness
+meetingSchema.index({ date: 1, time: 1 }, { unique: true });
 
 module.exports = mongoose.model('Meeting', meetingSchema);

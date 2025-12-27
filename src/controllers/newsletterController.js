@@ -51,7 +51,28 @@ const getAllSubscribers = async (req, res) => {
   }
 };
 
+const deleteSubscriber = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const deletedSubscriber = await Newsletter.findByIdAndDelete(id);
+    
+    if (!deletedSubscriber) {
+      return res.status(404).json({ error: 'Subscriber not found' });
+    }
+    
+    res.json({ 
+      success: true,
+      message: 'Subscriber deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Delete subscriber error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   subscribeNewsletter,
-  getAllSubscribers
+  getAllSubscribers,
+  deleteSubscriber
 };
