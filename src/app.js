@@ -21,7 +21,9 @@ app.use(cors({
     'http://localhost:5174',
     'https://flowtel-aie.vercel.app',
     'https://flowtel-admin.vercel.app',
-    'https://flowtelaie-adminpanel.netlify.app'
+    'https://flowtelaie-adminpanel.netlify.app',
+    'https://*.netlify.app',
+    'https://*.render.com'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
