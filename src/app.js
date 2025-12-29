@@ -20,7 +20,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:5174',
     'https://flowtel-aie.vercel.app',
-    'https://flowtel-admin.vercel.app'
+    'https://flowtel-admin.vercel.app',
+    'https://flowtelaie-adminpanel.netlify.app'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
