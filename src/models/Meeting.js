@@ -47,7 +47,7 @@ const meetingSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index for date and time uniqueness
-meetingSchema.index({ date: 1, time: 1 }, { unique: true });
+// Compound index for date and time (removed unique constraint)
+meetingSchema.index({ date: 1, time: 1 });
 
 module.exports = mongoose.model('Meeting', meetingSchema);

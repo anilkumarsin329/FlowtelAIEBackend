@@ -52,15 +52,22 @@ const bookMeeting = async (req, res) => {
     
     const savedMeeting = await newMeeting.save();
     
-    // Send confirmation email
-    const emailSent = await sendMeetingConfirmation({
-      name,
-      email,
-      phone,
-      date,
-      time,
-      message: message || ''
-    });
+    // Send confirmation email (with error handling)
+    let emailSent = false;
+    try {
+      await sendMeetingConfirmation({
+        name,
+        email,
+        phone,
+        date,
+        time,
+        message: message || ''
+      });
+      emailSent = true;
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      emailSent = false;
+    }
     
     res.json({ 
       success: true,
@@ -76,10 +83,102 @@ const bookMeeting = async (req, res) => {
 
 const getAllMeetingRequests = async (req, res) => {
   try {
-    const requests = await Meeting.find({}).sort({ date: 1, time: 1 });
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      search, 
+      export: isExport 
+    } = req.query;
+
+    // Build query
+    let query = {};
     
-    res.json({ data: requests });
+    // Filter by status (exclude 'available' slots)
+    if (status && status !== 'all') {
+      query.status = status;
+    } else {
+      query.status = { $ne: 'available' };
+    }
+    
+    // Search functionality
+    if (search) {
+      query.$or = [
+        { clientName: { $regex: search, $options: 'i' } },
+        { clientEmail: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // If export is requested, return all data
+    if (isExport === 'true') {
+      const requests = await Meeting.find(query).sort({ createdAt: -1 });
+      return res.json({ data: requests });
+    }
+    
+    // Pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+    
+    // Get total count for pagination
+    const total = await Meeting.countDocuments(query);
+    
+    // Get paginated results
+    const requests = await Meeting.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+    
+    res.json({ 
+      data: requests,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum)
+    });
   } catch (error) {
+    console.error('Error fetching meeting requests:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// New endpoint for getting tab counts
+const getMeetingRequestCounts = async (req, res) => {
+  try {
+    const counts = await Meeting.aggregate([
+      {
+        $match: {
+          status: { $ne: 'available' }
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Initialize all status counts
+    const result = {
+      all: 0,
+      pending: 0,
+      confirmed: 0,
+      completed: 0,
+      cancelled: 0
+    };
+    
+    // Calculate total and individual counts
+    counts.forEach(item => {
+      if (item._id && result.hasOwnProperty(item._id)) {
+        result[item._id] = item.count;
+        result.all += item.count;
+      }
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching meeting request counts:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -111,10 +210,6 @@ const updateMeetingStatus = async (req, res) => {
       
     } else if (status === 'cancelled') {
       updateData.cancellationReason = cancellationReason;
-      updateData.clientName = '';
-      updateData.clientEmail = '';
-      updateData.clientPhone = '';
-      updateData.message = '';
       
       // Send cancellation email
       if (meeting.clientEmail) {
@@ -128,6 +223,10 @@ const updateMeetingStatus = async (req, res) => {
         });
       }
       
+    } else if (status === 'completed') {
+      // When meeting is completed, keep client data for result creation
+      updateData.completedAt = new Date();
+      
     } else if (status === 'available') {
       updateData.clientName = '';
       updateData.clientEmail = '';
@@ -136,6 +235,7 @@ const updateMeetingStatus = async (req, res) => {
       updateData.cancellationReason = '';
       updateData.bookedAt = null;
       updateData.confirmedAt = null;
+      updateData.completedAt = null;
     }
     
     const updatedMeeting = await Meeting.findByIdAndUpdate(id, updateData, { new: true });
@@ -347,15 +447,43 @@ const getAllSlots = async (req, res) => {
   }
 };
 
+const deleteAllSlotsForDate = async (req, res) => {
+  try {
+    const { date } = req.params;
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    
+    // Only delete available slots, not booked ones
+    const result = await Meeting.deleteMany({
+      date: { $gte: targetDate, $lt: nextDay },
+      status: 'available'
+    });
+    
+    res.json({ 
+      success: true, 
+      deletedCount: result.deletedCount,
+      message: `${result.deletedCount} available slots deleted` 
+    });
+  } catch (error) {
+    console.error('Delete all slots error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   createMeetingSlots,
   bookMeeting,
   getAllMeetingRequests,
+  getMeetingRequestCounts,
   updateMeetingStatus,
   updateMeetingRequest,
   deleteMeetingRequest,
   getMeetingsByDate,
   getAvailableSlots,
   deleteMeetingSlot,
-  getAllSlots
+  getAllSlots,
+  deleteAllSlotsForDate
 };
