@@ -38,45 +38,83 @@ const bookMeeting = async (req, res) => {
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
     
-    // Always create a new meeting entry for any time slot
-    const newMeeting = new Meeting({
+    // Check if slot already exists for this date and time
+    const existingSlot = await Meeting.findOne({
       date: targetDate,
-      time,
-      status: 'pending',
-      clientName: name,
-      clientEmail: email,
-      clientPhone: phone,
-      message: message || '',
-      bookedAt: new Date()
+      time: time
     });
     
-    const savedMeeting = await newMeeting.save();
-    
-    // Send confirmation email (with error handling)
-    let emailSent = false;
-    try {
-      await sendMeetingConfirmation({
-        name,
-        email,
-        phone,
-        date,
+    if (existingSlot) {
+      // If slot exists and is available, book it
+      if (existingSlot.status === 'available') {
+        existingSlot.status = 'pending';
+        existingSlot.clientName = name;
+        existingSlot.clientEmail = email;
+        existingSlot.clientPhone = phone;
+        existingSlot.message = message || '';
+        existingSlot.bookedAt = new Date();
+        
+        const savedMeeting = await existingSlot.save();
+        
+        // Send confirmation email
+        let emailSent = false;
+        try {
+          await sendMeetingConfirmation({
+            name, email, phone, date, time, message: message || ''
+          });
+          emailSent = true;
+        } catch (emailError) {
+          console.error('Email sending failed:', emailError);
+        }
+        
+        return res.json({ 
+          success: true,
+          message: 'Meeting booked successfully!',
+          data: savedMeeting,
+          emailSent
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: 'This time slot is already booked'
+        });
+      }
+    } else {
+      // Create new slot if doesn't exist
+      const newMeeting = new Meeting({
+        date: targetDate,
         time,
-        message: message || ''
+        status: 'pending',
+        clientName: name,
+        clientEmail: email,
+        clientPhone: phone,
+        message: message || '',
+        bookedAt: new Date()
       });
-      emailSent = true;
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      emailSent = false;
+      
+      const savedMeeting = await newMeeting.save();
+      
+      // Send confirmation email
+      let emailSent = false;
+      try {
+        await sendMeetingConfirmation({
+          name, email, phone, date, time, message: message || ''
+        });
+        emailSent = true;
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+      }
+      
+      return res.json({ 
+        success: true,
+        message: 'Meeting booked successfully!',
+        data: savedMeeting,
+        emailSent
+      });
     }
     
-    res.json({ 
-      success: true,
-      message: 'Meeting booked successfully!',
-      data: savedMeeting,
-      emailSent
-    });
-    
   } catch (error) {
+    console.error('Booking error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

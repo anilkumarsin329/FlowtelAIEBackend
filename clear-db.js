@@ -11,6 +11,6 @@ mongoose.connect(process.env.MONGODB_URI).then(async () => {
   console.log('✅ All meeting data cleared!');
   process.exit(0);
 }).catch(err => {
-  console.error('❌ Error:', err);
+  console.error('❌ Error:', err)
   process.exit(1);
 });

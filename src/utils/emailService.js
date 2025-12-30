@@ -16,6 +16,22 @@ const sendMeetingConfirmation = async (meetingData) => {
   try {
     const { name, email, phone, date, time, message } = meetingData;
     
+    // Format date and time properly (manual formatting to avoid timezone issues)
+    console.log('Original date received:', date);
+    const [year, month, day] = date.split('-');
+    console.log('Split date parts:', { year, month, day });
+    const dateObj = new Date(year, month - 1, day); // month is 0-indexed
+    console.log('Created date object:', dateObj);
+    const formattedDate = dateObj.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    console.log('Formatted date:', formattedDate);
+    
+    const formattedTime = time || 'Time not specified';
+    
     // Email to customer
     const customerMailOptions = {
       from: process.env.EMAIL_USER,
@@ -38,8 +54,8 @@ const sendMeetingConfirmation = async (meetingData) => {
             
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Meeting Details:</h3>
-              <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-              <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
+              <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
+              <p style="margin: 5px 0;"><strong>Time:</strong> ${formattedTime}</p>
               <p style="margin: 5px 0;"><strong>Phone:</strong> ${phone || 'Not provided'}</p>
               ${message ? `<p style="margin: 5px 0;"><strong>Message:</strong> ${message}</p>` : ''}
             </div>
@@ -76,10 +92,17 @@ const sendMeetingConfirmation = async (meetingData) => {
             <p><strong>Name:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
             <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-            <p><strong>Preferred Date:</strong> ${date}</p>
-            <p><strong>Preferred Time:</strong> ${time}</p>
+            <p><strong>Preferred Date:</strong> ${formattedDate}</p>
+            <p><strong>Preferred Time:</strong> ${formattedTime}</p>
             ${message ? `<p><strong>Message:</strong> ${message}</p>` : ''}
-            <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Submitted:</strong> ${new Date().toLocaleString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
           </div>
           
           <p style="color: #666; margin-top: 20px;">
@@ -116,6 +139,27 @@ const sendMeetingUpdateEmail = async (updateData) => {
   try {
     const { email, name, phone, oldDate, oldTime, newDate, newTime } = updateData;
     
+    // Format dates properly (manual formatting to avoid timezone issues)
+    const [oldYear, oldMonth, oldDay] = oldDate.split('-');
+    const [newYear, newMonth, newDay] = newDate.split('-');
+    
+    const oldDateObj = new Date(oldYear, oldMonth - 1, oldDay);
+    const newDateObj = new Date(newYear, newMonth - 1, newDay);
+    
+    const formattedOldDate = oldDateObj.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const formattedNewDate = newDateObj.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -137,12 +181,12 @@ const sendMeetingUpdateEmail = async (updateData) => {
             
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: #333; margin-top: 0;">Previous Schedule:</h3>
-              <p style="margin: 5px 0; color: #999;"><strong>Date:</strong> ${oldDate}</p>
-              <p style="margin: 5px 0; color: #999;"><strong>Time:</strong> ${oldTime}</p>
+              <p style="margin: 5px 0; color: #999;"><strong>Date:</strong> ${formattedOldDate}</p>
+              <p style="margin: 5px 0; color: #999;"><strong>Time:</strong> ${oldTime || 'Not specified'}</p>
               
               <h3 style="color: #333; margin-top: 20px;">New Schedule:</h3>
-              <p style="margin: 5px 0; color: #28a745;"><strong>Date:</strong> ${newDate}</p>
-              <p style="margin: 5px 0; color: #28a745;"><strong>Time:</strong> ${newTime}</p>
+              <p style="margin: 5px 0; color: #28a745;"><strong>Date:</strong> ${formattedNewDate}</p>
+              <p style="margin: 5px 0; color: #28a745;"><strong>Time:</strong> ${newTime || 'Not specified'}</p>
               ${phone ? `<p style="margin: 5px 0;"><strong>Phone:</strong> ${phone}</p>` : ''}
             </div>
             
@@ -178,6 +222,20 @@ const sendMeetingCancellationEmail = async (cancellationData) => {
   try {
     const { email, name, phone, date, time, reason } = cancellationData;
     
+    // Format date properly (manual formatting to avoid timezone issues)
+    console.log('Cancellation - Original date received:', date);
+    const [year, month, day] = date.split('-');
+    console.log('Cancellation - Split date parts:', { year, month, day });
+    const dateObj = new Date(year, month - 1, day); // month is 0-indexed
+    console.log('Cancellation - Created date object:', dateObj);
+    const formattedDate = dateObj.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    console.log('Cancellation - Formatted date:', formattedDate);
+    
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -199,8 +257,8 @@ const sendMeetingCancellationEmail = async (cancellationData) => {
             
             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;">
               <h3 style="color: #333; margin-top: 0;">Cancelled Meeting Details:</h3>
-              <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-              <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
+              <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
+              <p style="margin: 5px 0;"><strong>Time:</strong> ${time || 'Not specified'}</p>
               ${phone ? `<p style="margin: 5px 0;"><strong>Phone:</strong> ${phone}</p>` : ''}
               <p style="margin: 5px 0;"><strong>Reason:</strong> ${reason}</p>
             </div>
@@ -210,12 +268,14 @@ const sendMeetingCancellationEmail = async (cancellationData) => {
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="tel:+917079578207" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-right: 10px;">
-                Call Us: +91 7079578207
-              </a>
-              <a href="mailto:anilkumarsingh43425@gmail.com" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Reschedule Meeting
-              </a>
+              <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                <a href="tel:+917079578207" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                  Call Us: +91 7079578207
+                </a>
+                <a href="mailto:anilkumarsingh43425@gmail.com" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                  Reschedule Meeting
+                </a>
+              </div>
             </div>
             
             <p style="color: #999; font-size: 14px; text-align: center;">

@@ -11,7 +11,7 @@ const meetingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['available', 'pending', 'confirmed', 'cancelled'],
+    enum: ['available', 'pending', 'confirmed', 'completed', 'cancelled'],
     default: 'available'
   },
   // Client Information (only when booked)
@@ -41,6 +41,9 @@ const meetingSchema = new mongoose.Schema({
     type: Date
   },
   confirmedAt: {
+    type: Date
+  },
+  completedAt: {
     type: Date
   }
 }, {
