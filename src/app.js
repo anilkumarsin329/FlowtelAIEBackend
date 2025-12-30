@@ -22,6 +22,7 @@ app.use(cors({
     'https://flowtel-aie.vercel.app',
     'https://flowtel-admin.vercel.app',
     'https://flowtelaie-adminpanel.netlify.app',
+    'https://flowtel-aie-adminpanel.vercel.app',
     'https://flowtelaiebackend-ai.onrender.com'
   ],
   credentials: true,
