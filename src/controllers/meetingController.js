@@ -38,14 +38,12 @@ const bookMeeting = async (req, res) => {
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
     
-    // Check if slot already exists for this date and time
     const existingSlot = await Meeting.findOne({
       date: targetDate,
       time: time
     });
     
     if (existingSlot) {
-      // If slot exists and is available, book it
       if (existingSlot.status === 'available') {
         existingSlot.status = 'pending';
         existingSlot.clientName = name;
@@ -56,15 +54,13 @@ const bookMeeting = async (req, res) => {
         
         const savedMeeting = await existingSlot.save();
         
-        // Send confirmation email asynchronously
         setImmediate(async () => {
           try {
             await sendMeetingConfirmation({
               name, email, phone, date, time, message: message || ''
             });
-            console.log('Email sent successfully');
           } catch (emailError) {
-            console.error('Email sending failed:', emailError);
+            console.error('Email sending failed:', emailError.message);
           }
         });
         
@@ -81,7 +77,6 @@ const bookMeeting = async (req, res) => {
         });
       }
     } else {
-      // Create new slot if doesn't exist
       const newMeeting = new Meeting({
         date: targetDate,
         time,
@@ -95,15 +90,13 @@ const bookMeeting = async (req, res) => {
       
       const savedMeeting = await newMeeting.save();
       
-      // Send confirmation email asynchronously
       setImmediate(async () => {
         try {
           await sendMeetingConfirmation({
             name, email, phone, date, time, message: message || ''
           });
-          console.log('Email sent successfully');
         } catch (emailError) {
-          console.error('Email sending failed:', emailError);
+          console.error('Email sending failed:', emailError.message);
         }
       });
       
@@ -116,7 +109,7 @@ const bookMeeting = async (req, res) => {
     }
     
   } catch (error) {
-    console.error('Booking error:', error);
+    console.error('Booking error:', error.message);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

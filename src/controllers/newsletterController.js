@@ -14,22 +14,18 @@ const subscribeNewsletter = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
     
-    // Check if email already exists
     const existingSubscriber = await Newsletter.findOne({ email });
     if (existingSubscriber) {
       return res.status(400).json({ error: 'Email already subscribed' });
     }
     
-    // Save to database
     const newsletter = new Newsletter({ email });
     await newsletter.save();
     
-    // Send welcome email
     try {
       await sendWelcomeEmail(email);
     } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      // Continue even if email fails
+      console.error('Welcome email failed:', emailError.message);
     }
     
     res.status(201).json({ 
@@ -38,6 +34,7 @@ const subscribeNewsletter = async (req, res) => {
     });
     
   } catch (error) {
+    console.error('Newsletter subscription error:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
