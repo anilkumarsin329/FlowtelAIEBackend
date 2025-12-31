@@ -56,22 +56,23 @@ const bookMeeting = async (req, res) => {
         
         const savedMeeting = await existingSlot.save();
         
-        // Send confirmation email
-        let emailSent = false;
-        try {
-          await sendMeetingConfirmation({
-            name, email, phone, date, time, message: message || ''
-          });
-          emailSent = true;
-        } catch (emailError) {
-          console.error('Email sending failed:', emailError);
-        }
+        // Send confirmation email asynchronously
+        setImmediate(async () => {
+          try {
+            await sendMeetingConfirmation({
+              name, email, phone, date, time, message: message || ''
+            });
+            console.log('Email sent successfully');
+          } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+          }
+        });
         
         return res.json({ 
           success: true,
           message: 'Meeting booked successfully!',
           data: savedMeeting,
-          emailSent
+          emailSent: 'processing'
         });
       } else {
         return res.status(400).json({
@@ -94,22 +95,23 @@ const bookMeeting = async (req, res) => {
       
       const savedMeeting = await newMeeting.save();
       
-      // Send confirmation email
-      let emailSent = false;
-      try {
-        await sendMeetingConfirmation({
-          name, email, phone, date, time, message: message || ''
-        });
-        emailSent = true;
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-      }
+      // Send confirmation email asynchronously
+      setImmediate(async () => {
+        try {
+          await sendMeetingConfirmation({
+            name, email, phone, date, time, message: message || ''
+          });
+          console.log('Email sent successfully');
+        } catch (emailError) {
+          console.error('Email sending failed:', emailError);
+        }
+      });
       
       return res.json({ 
         success: true,
         message: 'Meeting booked successfully!',
         data: savedMeeting,
-        emailSent
+        emailSent: 'processing'
       });
     }
     
