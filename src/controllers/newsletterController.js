@@ -19,18 +19,29 @@ const subscribeNewsletter = async (req, res) => {
       return res.status(400).json({ error: 'Email already subscribed' });
     }
     
+    // Save to database first
     const newsletter = new Newsletter({ email });
     await newsletter.save();
     
-    try {
-      await sendWelcomeEmail(email);
-    } catch (emailError) {
-      console.error('Welcome email failed:', emailError.message);
-    }
+    // Send welcome email asynchronously with better logging
+    setImmediate(async () => {
+      try {
+        console.log('📧 Sending welcome email to:', email);
+        const result = await sendWelcomeEmail(email);
+        if (result) {
+          console.log('✅ Welcome email sent successfully to:', email);
+        } else {
+          console.log('❌ Welcome email failed for:', email);
+        }
+      } catch (emailError) {
+        console.error('❌ Welcome email error for:', email, emailError.message);
+      }
+    });
     
     res.status(201).json({ 
       message: 'Successfully subscribed to newsletter!',
-      data: { email }
+      data: { email },
+      emailStatus: 'processing'
     });
     
   } catch (error) {

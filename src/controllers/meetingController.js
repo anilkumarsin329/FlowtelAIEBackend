@@ -56,11 +56,17 @@ const bookMeeting = async (req, res) => {
         
         setImmediate(async () => {
           try {
-            await sendMeetingConfirmation({
+            console.log('📧 Sending meeting confirmation to:', email);
+            const result = await sendMeetingConfirmation({
               name, email, phone, date, time, message: message || ''
             });
+            if (result) {
+              console.log('✅ Meeting confirmation sent successfully to:', email);
+            } else {
+              console.log('❌ Meeting confirmation failed for:', email);
+            }
           } catch (emailError) {
-            console.error('Email sending failed:', emailError.message);
+            console.error('❌ Meeting confirmation error for:', email, emailError.message);
           }
         });
         
@@ -92,11 +98,17 @@ const bookMeeting = async (req, res) => {
       
       setImmediate(async () => {
         try {
-          await sendMeetingConfirmation({
+          console.log('📧 Sending meeting confirmation to:', email);
+          const result = await sendMeetingConfirmation({
             name, email, phone, date, time, message: message || ''
           });
+          if (result) {
+            console.log('✅ Meeting confirmation sent successfully to:', email);
+          } else {
+            console.log('❌ Meeting confirmation failed for:', email);
+          }
         } catch (emailError) {
-          console.error('Email sending failed:', emailError.message);
+          console.error('❌ Meeting confirmation error for:', email, emailError.message);
         }
       });
       
@@ -231,28 +243,52 @@ const updateMeetingStatus = async (req, res) => {
     if (status === 'confirmed') {
       updateData.confirmedAt = new Date();
       
-      // Send confirmation email
-      await sendMeetingConfirmation({
-        name: meeting.clientName,
-        email: meeting.clientEmail,
-        phone: meeting.clientPhone,
-        date: meeting.date.toISOString().split('T')[0],
-        time: meeting.time,
-        message: meeting.message || ''
+      // Send confirmation email asynchronously
+      setImmediate(async () => {
+        try {
+          console.log('📧 Sending meeting confirmation to:', meeting.clientEmail);
+          const result = await sendMeetingConfirmation({
+            name: meeting.clientName,
+            email: meeting.clientEmail,
+            phone: meeting.clientPhone,
+            date: meeting.date.toISOString().split('T')[0],
+            time: meeting.time,
+            message: meeting.message || ''
+          });
+          if (result) {
+            console.log('✅ Meeting confirmation sent successfully to:', meeting.clientEmail);
+          } else {
+            console.log('❌ Meeting confirmation failed for:', meeting.clientEmail);
+          }
+        } catch (emailError) {
+          console.error('❌ Confirmation email error for:', meeting.clientEmail, emailError.message);
+        }
       });
       
     } else if (status === 'cancelled') {
       updateData.cancellationReason = cancellationReason;
       
-      // Send cancellation email
+      // Send cancellation email asynchronously
       if (meeting.clientEmail) {
-        await sendMeetingCancellationEmail({
-          name: meeting.clientName,
-          email: meeting.clientEmail,
-          phone: meeting.clientPhone,
-          date: meeting.date.toISOString().split('T')[0],
-          time: meeting.time,
-          reason: cancellationReason || 'No reason provided'
+        setImmediate(async () => {
+          try {
+            console.log('📧 Sending meeting cancellation to:', meeting.clientEmail);
+            const result = await sendMeetingCancellationEmail({
+              name: meeting.clientName,
+              email: meeting.clientEmail,
+              phone: meeting.clientPhone,
+              date: meeting.date.toISOString().split('T')[0],
+              time: meeting.time,
+              reason: cancellationReason || 'No reason provided'
+            });
+            if (result) {
+              console.log('✅ Meeting cancellation sent successfully to:', meeting.clientEmail);
+            } else {
+              console.log('❌ Meeting cancellation failed for:', meeting.clientEmail);
+            }
+          } catch (emailError) {
+            console.error('❌ Cancellation email error for:', meeting.clientEmail, emailError.message);
+          }
         });
       }
       
@@ -419,15 +455,27 @@ const updateMeetingRequest = async (req, res) => {
     
     // Send email if date or time was updated
     if ((updates.date || updates.time) && originalMeeting.clientEmail) {
-      await sendMeetingUpdateEmail({
-        name: originalMeeting.clientName,
-        email: originalMeeting.clientEmail,
-        phone: originalMeeting.clientPhone,
-        oldDate: originalMeeting.date.toISOString().split('T')[0],
-        oldTime: originalMeeting.time,
-        newDate: updates.date || originalMeeting.date.toISOString().split('T')[0],
-        newTime: updates.time || originalMeeting.time,
-        message: originalMeeting.message || ''
+      setImmediate(async () => {
+        try {
+          console.log('📧 Sending meeting update to:', originalMeeting.clientEmail);
+          const result = await sendMeetingUpdateEmail({
+            name: originalMeeting.clientName,
+            email: originalMeeting.clientEmail,
+            phone: originalMeeting.clientPhone,
+            oldDate: originalMeeting.date.toISOString().split('T')[0],
+            oldTime: originalMeeting.time,
+            newDate: updates.date || originalMeeting.date.toISOString().split('T')[0],
+            newTime: updates.time || originalMeeting.time,
+            message: originalMeeting.message || ''
+          });
+          if (result) {
+            console.log('✅ Meeting update sent successfully to:', originalMeeting.clientEmail);
+          } else {
+            console.log('❌ Meeting update failed for:', originalMeeting.clientEmail);
+          }
+        } catch (emailError) {
+          console.error('❌ Update email error for:', originalMeeting.clientEmail, emailError.message);
+        }
       });
     }
     
