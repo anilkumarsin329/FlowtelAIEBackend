@@ -2,8 +2,8 @@ const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Use environment variable for sender domain or fallback to resend.dev
-const SENDER_EMAIL = process.env.SENDER_DOMAIN ? `FlowtelAI <noreply@${process.env.SENDER_DOMAIN}>` : 'FlowtelAI <noreply@resend.dev>';
+// Use aitotateam@gmail.com as sender email
+const SENDER_EMAIL = 'FlowtelAI <aitotateam@gmail.com>';
 
 const sendWelcomeEmail = async (email) => {
   try {
