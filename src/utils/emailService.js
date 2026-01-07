@@ -2,8 +2,8 @@ const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Use aitotateam@gmail.com as sender email
-const SENDER_EMAIL = 'FlowtelAI <aitotateam@gmail.com>';
+// Use aitota.com verified domain as sender email
+const SENDER_EMAIL = 'FlowtelAI <noreply@aitota.com>';
 
 const formatDate = (date) => {
   try {
